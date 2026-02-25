@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
-import { ArrowDown, Users, MousePointerClick, UserPlus, Mail, PhoneCall, MessageSquare, FileText, Handshake, Monitor, BookOpen, Lightbulb } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { ArrowDown, Users, MousePointerClick, UserPlus, Mail, PhoneCall, MessageSquare, FileText, Handshake, Monitor, BookOpen, Lightbulb, CalendarDays } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatNumber } from '@/lib/format';
+import { useGA4Data } from '@/hooks/useGA4Data';
+import { VisitorTrendChart } from './VisitorTrendChart';
 
 interface FunnelStage {
   id: string;
@@ -22,18 +24,65 @@ interface LeadMagnetFunnelTabProps {
   }[];
 }
 
+const PERIOD_OPTIONS = [
+  { value: '7d', label: '최근 7일' },
+  { value: '14d', label: '최근 14일' },
+  { value: '30d', label: '최근 30일' },
+  { value: '90d', label: '최근 90일' },
+  { value: 'all', label: '전체 기간' },
+  { value: 'custom', label: '날짜 선택' },
+] as const;
+
+type PeriodValue = (typeof PERIOD_OPTIONS)[number]['value'];
+
+function filterDealsByPeriod(
+  deals: LeadMagnetFunnelTabProps['deals'],
+  period: PeriodValue,
+  customStart?: string,
+  customEnd?: string,
+) {
+  if (period === 'all') return deals;
+  if (period === 'custom') {
+    if (!customStart || !customEnd) return deals;
+    const start = new Date(customStart);
+    const end = new Date(customEnd);
+    end.setHours(23, 59, 59, 999);
+    return deals.filter(d => {
+      const dt = new Date(d.created_at);
+      return dt >= start && dt <= end;
+    });
+  }
+  const days = parseInt(period);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return deals.filter(d => new Date(d.created_at) >= cutoff);
+}
+
 export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
+  const [period, setPeriod] = useState<PeriodValue>('7d');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  const filteredDeals = useMemo(
+    () => filterDealsByPeriod(deals, period, customStart, customEnd),
+    [deals, period, customStart, customEnd],
+  );
+
+  const { data: ga4Data, loading: ga4Loading } = useGA4Data(period, customStart, customEnd);
+
   const { topStage, simTrack, ebookTrack, insightTrack } = useMemo(() => {
     const stageOrder = ['lead', 'meeting', 'quote', 'contract', 'supply', 'won'];
-    const totalDeals = deals.filter(d => d.stage !== 'lost').length;
+    const totalDeals = filteredDeals.filter(d => d.stage !== 'lost').length;
 
     const atOrPast = (minIndex: number) =>
-      deals.filter(d => {
+      filteredDeals.filter(d => {
         if (d.stage === 'lost') return false;
         return stageOrder.indexOf(d.stage) >= minIndex;
       }).length;
 
-    const siteVisitors = totalDeals > 0 ? Math.round(totalDeals / 0.06) : 5000;
+    const estimatedVisitors = totalDeals > 0 ? Math.round(totalDeals / 0.06) : 5000;
+    const siteVisitors = ga4Data?.totalVisitors ?? estimatedVisitors;
 
     // Split ratios for simulator vs ebook vs insight
     const simRatio = 0.45;
@@ -110,7 +159,7 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
       ebookTrack: buildTrack('ebook', <BookOpen className="h-5 w-5" />, '페이지도달 : 전자북', '전자북 랜딩', ebookPageVisits, ebookSignups, ebookNurtured, ebookInquiries, ebookConsultations, ebookQuotes, ebookClosed),
       insightTrack: buildTrack('insight', <Lightbulb className="h-5 w-5" />, '페이지도달 : 인사이트', '인사이트 랜딩', insightPageVisits, insightSignups, insightNurtured, insightInquiries, insightConsultations, insightQuotes, insightClosed),
     };
-  }, [deals]);
+  }, [filteredDeals, ga4Data]);
 
   const sections = [
     { title: '2. 리드 확보 (Lead Gen)', indices: [1] },
@@ -129,11 +178,74 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold">리드마그넷 퍼널</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          사이트 방문 → 페이지도달(시뮬레이터/전자북/인사이트) → 회원가입 → 너처링 → 문의 → 상담 → 견적 → 계약
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-bold">리드마그넷 퍼널</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            사이트 방문 → 페이지도달(시뮬레이터/전자북/인사이트) → 회원가입 → 너처링 → 문의 → 상담 → 견적 → 계약
+          </p>
+        </div>
+        <div className="relative" ref={datePickerRef}>
+          <select
+            value={period}
+            onChange={(e) => {
+              const val = e.target.value as PeriodValue;
+              setPeriod(val);
+              if (val === 'custom') {
+                setShowDatePicker(true);
+              } else {
+                setShowDatePicker(false);
+              }
+            }}
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {PERIOD_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.value === 'custom' && customStart && customEnd && period === 'custom'
+                  ? `${customStart} ~ ${customEnd}`
+                  : opt.label}
+              </option>
+            ))}
+          </select>
+
+          {showDatePicker && period === 'custom' && (
+            <div className="absolute right-0 top-full mt-2 z-50 rounded-xl border bg-card shadow-lg p-4 min-w-[300px]">
+              <div className="flex items-center gap-2 mb-3">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">기간 선택</span>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">시작일</label>
+                  <input
+                    type="date"
+                    value={customStart}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">종료일</label>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    min={customStart}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(false)}
+                disabled={!customStart || !customEnd}
+                className="mt-3 w-full rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                적용
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -143,7 +255,7 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
         const inquiryTotal = simTrack[3].count + ebookTrack[3].count + insightTrack[3].count;
         return (
           <div className="grid grid-cols-5 gap-3">
-            <SummaryCard label="총 방문자" value={topStage.count} />
+            <SummaryCard label="방문자" value={topStage.count} />
             <SummaryCard label="가입/이메일 확보" value={signupTotal} rate={calcRate(topStage.count, signupTotal)} />
             <SummaryCard label="리드 확보" value={leadTotal} rate={calcRate(signupTotal, leadTotal)} />
             <SummaryCard label="구매 문의" value={inquiryTotal} rate={calcRate(leadTotal, inquiryTotal)} />
@@ -151,6 +263,9 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
           </div>
         );
       })()}
+
+      {/* Visitor Trend Chart */}
+      <VisitorTrendChart data={ga4Data?.dailyTrend ?? []} loading={ga4Loading} />
 
       {/* Funnel Visualization */}
       <Card>
