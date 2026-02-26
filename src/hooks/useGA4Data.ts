@@ -30,6 +30,7 @@ export function useGA4Data(
       })
       .catch((err) => {
         if (!cancelled) {
+          setData(null);
           setError(err.message);
           setLoading(false);
         }

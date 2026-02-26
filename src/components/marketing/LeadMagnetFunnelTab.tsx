@@ -54,7 +54,8 @@ function filterDealsByPeriod(
   }
   const days = parseInt(period);
   const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
+  cutoff.setDate(cutoff.getDate() - (days - 1));
+  cutoff.setHours(0, 0, 0, 0);
   return deals.filter(d => new Date(d.created_at) >= cutoff);
 }
 
@@ -69,7 +70,7 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
     [deals, period, customStart, customEnd],
   );
 
-  const { data: ga4Data, loading: ga4Loading } = useGA4Data(period, customStart, customEnd);
+  const { data: ga4Data, loading: ga4Loading, error: ga4Error } = useGA4Data(period, customStart, customEnd);
 
   const { topStage, simTrack, ebookTrack, insightTrack } = useMemo(() => {
     const stageOrder = ['lead', 'meeting', 'quote', 'contract', 'supply', 'won'];
@@ -81,8 +82,7 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
         return stageOrder.indexOf(d.stage) >= minIndex;
       }).length;
 
-    const estimatedVisitors = totalDeals > 0 ? Math.round(totalDeals / 0.06) : 5000;
-    const siteVisitors = ga4Data?.totalVisitors ?? estimatedVisitors;
+    const siteVisitors = ga4Data?.totalVisitors ?? 0;
 
     // Split ratios for simulator vs ebook vs insight
     const simRatio = 0.45;
@@ -124,7 +124,7 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
 
     const top: FunnelStage = {
       id: 'visitors',
-      label: '사이트 방문자 (UV)',
+      label: '사이트 방문자 (GA4)',
       sublabel: '유입 & 탐색',
       count: siteVisitors,
       icon: <Users className="h-5 w-5" />,
@@ -255,7 +255,7 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
         const inquiryTotal = simTrack[3].count + ebookTrack[3].count + insightTrack[3].count;
         return (
           <div className="grid grid-cols-5 gap-3">
-            <SummaryCard label="방문자" value={topStage.count} />
+            <SummaryCard label="방문자 (GA4)" value={topStage.count} loading={ga4Loading} />
             <SummaryCard label="가입/이메일 확보" value={signupTotal} rate={calcRate(topStage.count, signupTotal)} />
             <SummaryCard label="리드 확보" value={leadTotal} rate={calcRate(signupTotal, leadTotal)} />
             <SummaryCard label="구매 문의" value={inquiryTotal} rate={calcRate(leadTotal, inquiryTotal)} />
@@ -263,6 +263,18 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
           </div>
         );
       })()}
+
+      {/* GA4 Data Status */}
+      {ga4Error && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+          GA4 데이터 로드 실패: {ga4Error} — 추정값으로 표시 중
+        </div>
+      )}
+      {!ga4Loading && !ga4Error && !ga4Data && (
+        <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 px-4 py-2 text-sm text-yellow-700 dark:text-yellow-400">
+          날짜를 선택해주세요 — GA4 데이터 대기 중
+        </div>
+      )}
 
       {/* Visitor Trend Chart */}
       <VisitorTrendChart data={ga4Data?.dailyTrend ?? []} loading={ga4Loading} />
@@ -358,12 +370,12 @@ export function LeadMagnetFunnelTab({ deals }: LeadMagnetFunnelTabProps) {
 
 /* ── Sub-components ── */
 
-function SummaryCard({ label, value, rate, highlight = false }: { label: string; value: number; rate?: number; highlight?: boolean }) {
+function SummaryCard({ label, value, rate, highlight = false, loading = false }: { label: string; value: number; rate?: number; highlight?: boolean; loading?: boolean }) {
   return (
     <div className={`rounded-xl border p-3 sm:p-4 ${highlight ? 'bg-orange-500/10 border-orange-500/30' : 'bg-card'}`}>
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-lg sm:text-2xl font-bold ${highlight ? 'text-orange-500' : 'text-foreground'}`}>
-        {formatNumber(value)}
+        {loading ? <span className="text-muted-foreground animate-pulse">···</span> : formatNumber(value)}
       </p>
       {rate !== undefined && (
         <p className="text-xs text-muted-foreground mt-1">전환율 <span className="font-semibold text-primary">{rate.toFixed(1)}%</span></p>
