@@ -2,12 +2,25 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOdoo } from '../hooks/useOdoo'
 
-const STAGE_LABELS = {
-  won: '성공',
-  lost: '실패',
+const PAGE_SIZE = 20
+
+// Odoo 커스텀 필드명 매핑
+const F = {
+  industry: 'x_studio_selection_field_49m_1i3fcoqk9',
+  product: 'x_studio_selection_field_45h_1i3fd9s90',
+  platform: 'x_studio_selection_field_oo_1i57nj2og',
+  source: 'x_studio_selection_field_8p8_1i3up6bfn',
+  medium: 'x_studio_selection_field_5f4_1i3up2qg3',
+  campaign: 'x_studio_',
+  landing: 'x_studio_char_field_1vr_1i3fco0k9',
+  keyword: 'x_studio_char_field_3ao_1i3fcoas5',
 }
 
-const PAGE_SIZE = 20
+function val(v) {
+  if (!v || v === false) return '-'
+  if (Array.isArray(v)) return v[1] || '-'
+  return v
+}
 
 export default function NewPage() {
   const [page, setPage] = useState(0)
@@ -24,6 +37,14 @@ export default function NewPage() {
       'stage_id',
       'create_date',
       'user_id',
+      F.industry,
+      F.product,
+      F.platform,
+      F.source,
+      F.medium,
+      F.campaign,
+      F.landing,
+      F.keyword,
     ],
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
@@ -63,7 +84,7 @@ export default function NewPage() {
         ) : (
           <>
             <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
                     <th className="px-4 py-3 text-left font-medium">리드명</th>
@@ -73,38 +94,48 @@ export default function NewPage() {
                     <th className="px-4 py-3 text-right font-medium">예상 매출</th>
                     <th className="px-4 py-3 text-left font-medium">단계</th>
                     <th className="px-4 py-3 text-left font-medium">담당자</th>
+                    <th className="px-4 py-3 text-left font-medium">업종</th>
+                    <th className="px-4 py-3 text-left font-medium">관심상품</th>
+                    <th className="px-4 py-3 text-left font-medium">플랫폼</th>
+                    <th className="px-4 py-3 text-left font-medium">유입경로</th>
+                    <th className="px-4 py-3 text-left font-medium">전달매체</th>
+                    <th className="px-4 py-3 text-left font-medium">캠페인</th>
+                    <th className="px-4 py-3 text-left font-medium">랜딩</th>
+                    <th className="px-4 py-3 text-left font-medium">키워드</th>
                     <th className="px-4 py-3 text-left font-medium">생성일</th>
                   </tr>
                 </thead>
                 <tbody>
                   {leads.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                      <td colSpan={16} className="px-4 py-10 text-center text-muted-foreground">
                         리드 데이터가 없습니다.
                       </td>
                     </tr>
                   ) : (
                     leads.map((lead) => (
                       <tr key={lead.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium">{lead.name || '-'}</td>
-                        <td className="px-4 py-3">{lead.partner_name || '-'}</td>
-                        <td className="px-4 py-3">{lead.email_from || '-'}</td>
-                        <td className="px-4 py-3">{lead.phone || '-'}</td>
+                        <td className="px-4 py-3 font-medium">{val(lead.name)}</td>
+                        <td className="px-4 py-3">{val(lead.partner_name)}</td>
+                        <td className="px-4 py-3">{val(lead.email_from)}</td>
+                        <td className="px-4 py-3">{val(lead.phone)}</td>
                         <td className="px-4 py-3 text-right">
                           {lead.expected_revenue
                             ? Number(lead.expected_revenue).toLocaleString('ko-KR') + '원'
                             : '-'}
                         </td>
-                        <td className="px-4 py-3">
-                          {lead.stage_id
-                            ? (Array.isArray(lead.stage_id) ? lead.stage_id[1] : lead.stage_id)
-                            : '-'}
+                        <td className="px-4 py-3">{val(lead.stage_id)}</td>
+                        <td className="px-4 py-3">{val(lead.user_id)}</td>
+                        <td className="px-4 py-3">{val(lead[F.industry])}</td>
+                        <td className="px-4 py-3">{val(lead[F.product])}</td>
+                        <td className="px-4 py-3">{val(lead[F.platform])}</td>
+                        <td className="px-4 py-3">{val(lead[F.source])}</td>
+                        <td className="px-4 py-3">{val(lead[F.medium])}</td>
+                        <td className="px-4 py-3">{val(lead[F.campaign])}</td>
+                        <td className="px-4 py-3 max-w-[200px] truncate" title={val(lead[F.landing])}>
+                          {val(lead[F.landing])}
                         </td>
-                        <td className="px-4 py-3">
-                          {lead.user_id
-                            ? (Array.isArray(lead.user_id) ? lead.user_id[1] : lead.user_id)
-                            : '-'}
-                        </td>
+                        <td className="px-4 py-3">{val(lead[F.keyword])}</td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {lead.create_date
                             ? new Date(lead.create_date).toLocaleDateString('ko-KR')
