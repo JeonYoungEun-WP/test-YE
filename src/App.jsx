@@ -1,5 +1,6 @@
 import { LeadMagnetFunnelTab } from './components/marketing/LeadMagnetFunnelTab'
 import { GA4YesterdayBanner } from './components/marketing/GA4YesterdayBanner'
+import { GA4SessionSourceTable } from './components/marketing/GA4SessionSourceTable'
 import './App.css'
 
 const sampleDeals = [
@@ -27,6 +28,7 @@ function App() {
         <section className="space-y-4">
           <h1 className="text-2xl font-bold">GA 리포트</h1>
           <GA4YesterdayBanner />
+          <GA4SessionSourceTable />
         </section>
         <LeadMagnetFunnelTab deals={sampleDeals} />
       </div>

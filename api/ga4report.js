@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     const { startDate = "7daysAgo", endDate = "today" } = req.query;
     const accessToken = await getAccessToken();
 
-    const [summaryData, trendData] = await Promise.all([
+    const [summaryData, trendData, sourceData] = await Promise.all([
       runGA4Report(accessToken, {
         dateRanges: [{ startDate, endDate }],
         metrics: [{ name: "totalUsers" }, { name: "screenPageViews" }],
@@ -67,6 +67,13 @@ export default async function handler(req, res) {
         dimensions: [{ name: "date" }],
         metrics: [{ name: "totalUsers" }, { name: "screenPageViews" }],
         orderBys: [{ dimension: { dimensionName: "date" } }],
+      }),
+      runGA4Report(accessToken, {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: "sessionSource" }],
+        metrics: [{ name: "sessions" }],
+        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+        limit: 10,
       }),
     ]);
 
@@ -83,7 +90,12 @@ export default async function handler(req, res) {
       pageViews: parseInt(row.metricValues[1].value || "0"),
     }));
 
-    res.json({ totalVisitors, totalPageViews, dailyTrend });
+    const sessionSources = (sourceData.rows || []).map((row) => ({
+      source: row.dimensionValues[0].value,
+      sessions: parseInt(row.metricValues[0].value || "0"),
+    }));
+
+    res.json({ totalVisitors, totalPageViews, dailyTrend, sessionSources });
   } catch (error) {
     console.error("GA4 API error:", error);
     res.status(500).json({ error: "Failed to fetch GA4 data", detail: error.message });
