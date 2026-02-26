@@ -24,7 +24,10 @@ function App() {
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
       <div className="max-w-7xl mx-auto space-y-6">
-        <GA4YesterdayBanner />
+        <section className="space-y-4">
+          <h1 className="text-2xl font-bold">GA 리포트</h1>
+          <GA4YesterdayBanner />
+        </section>
         <LeadMagnetFunnelTab deals={sampleDeals} />
       </div>
     </div>
