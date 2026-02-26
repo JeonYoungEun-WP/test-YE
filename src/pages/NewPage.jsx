@@ -53,8 +53,8 @@ export default function NewPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <div className="min-h-screen bg-background p-6 md:p-10">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Link to="/" className="text-sm text-primary hover:underline">
             &larr; GA 리포트로 돌아가기
@@ -82,25 +82,25 @@ export default function NewPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="min-w-[1800px] text-sm whitespace-nowrap">
+            <div className="rounded-xl border border-border bg-card shadow-sm">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="px-4 py-3 text-left font-medium">리드명</th>
-                    <th className="px-4 py-3 text-left font-medium">고객</th>
-                    <th className="px-4 py-3 text-left font-medium">이메일</th>
-                    <th className="px-4 py-3 text-right font-medium">예상 매출</th>
-                    <th className="px-4 py-3 text-left font-medium">단계</th>
-                    <th className="px-4 py-3 text-left font-medium">담당자</th>
-                    <th className="px-4 py-3 text-left font-medium">업종</th>
-                    <th className="px-4 py-3 text-left font-medium">관심상품</th>
-                    <th className="px-4 py-3 text-left font-medium">플랫폼</th>
-                    <th className="px-4 py-3 text-left font-medium">유입경로</th>
-                    <th className="px-4 py-3 text-left font-medium">전달매체</th>
-                    <th className="px-4 py-3 text-left font-medium">캠페인</th>
-                    <th className="px-4 py-3 text-left font-medium">랜딩</th>
-                    <th className="px-4 py-3 text-left font-medium">키워드</th>
-                    <th className="px-4 py-3 text-left font-medium">생성일</th>
+                    <th className="px-2 py-2 text-left font-medium">리드명</th>
+                    <th className="px-2 py-2 text-left font-medium">고객</th>
+                    <th className="px-2 py-2 text-left font-medium">이메일</th>
+                    <th className="px-2 py-2 text-right font-medium">예상 매출</th>
+                    <th className="px-2 py-2 text-left font-medium">단계</th>
+                    <th className="px-2 py-2 text-left font-medium">담당자</th>
+                    <th className="px-2 py-2 text-left font-medium">업종</th>
+                    <th className="px-2 py-2 text-left font-medium">관심상품</th>
+                    <th className="px-2 py-2 text-left font-medium">플랫폼</th>
+                    <th className="px-2 py-2 text-left font-medium">유입경로</th>
+                    <th className="px-2 py-2 text-left font-medium">전달매체</th>
+                    <th className="px-2 py-2 text-left font-medium">캠페인</th>
+                    <th className="px-2 py-2 text-left font-medium">랜딩</th>
+                    <th className="px-2 py-2 text-left font-medium">키워드</th>
+                    <th className="px-2 py-2 text-left font-medium">생성일</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -113,27 +113,27 @@ export default function NewPage() {
                   ) : (
                     leads.map((lead) => (
                       <tr key={lead.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium">{val(lead.name)}</td>
-                        <td className="px-4 py-3">{val(lead.partner_name)}</td>
-                        <td className="px-4 py-3">{val(lead.email_from)}</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-2 py-2 font-medium">{val(lead.name)}</td>
+                        <td className="px-2 py-2">{val(lead.partner_name)}</td>
+                        <td className="px-2 py-2">{val(lead.email_from)}</td>
+                        <td className="px-2 py-2 text-right">
                           {lead.expected_revenue
                             ? Number(lead.expected_revenue).toLocaleString('ko-KR') + '원'
                             : '-'}
                         </td>
-                        <td className="px-4 py-3">{val(lead.stage_id)}</td>
-                        <td className="px-4 py-3">{val(lead.user_id)}</td>
-                        <td className="px-4 py-3">{val(lead[F.industry])}</td>
-                        <td className="px-4 py-3">{val(lead[F.product])}</td>
-                        <td className="px-4 py-3">{val(lead[F.platform])}</td>
-                        <td className="px-4 py-3">{val(lead[F.source])}</td>
-                        <td className="px-4 py-3">{val(lead[F.medium])}</td>
-                        <td className="px-4 py-3">{val(lead[F.campaign])}</td>
-                        <td className="px-4 py-3 max-w-[200px] truncate" title={val(lead[F.landing])}>
+                        <td className="px-2 py-2">{val(lead.stage_id)}</td>
+                        <td className="px-2 py-2">{val(lead.user_id)}</td>
+                        <td className="px-2 py-2">{val(lead[F.industry])}</td>
+                        <td className="px-2 py-2">{val(lead[F.product])}</td>
+                        <td className="px-2 py-2">{val(lead[F.platform])}</td>
+                        <td className="px-2 py-2">{val(lead[F.source])}</td>
+                        <td className="px-2 py-2">{val(lead[F.medium])}</td>
+                        <td className="px-2 py-2">{val(lead[F.campaign])}</td>
+                        <td className="px-2 py-2 max-w-[150px] truncate" title={val(lead[F.landing])}>
                           {val(lead[F.landing])}
                         </td>
-                        <td className="px-4 py-3">{val(lead[F.keyword])}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
+                        <td className="px-2 py-2">{val(lead[F.keyword])}</td>
+                        <td className="px-2 py-2 text-muted-foreground">
                           {lead.create_date
                             ? new Date(lead.create_date).toLocaleDateString('ko-KR')
                             : '-'}
