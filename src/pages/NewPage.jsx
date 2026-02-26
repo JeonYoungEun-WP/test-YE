@@ -201,7 +201,7 @@ export default function NewPage() {
                         <td className="px-2 py-2">{val(lead[F.medium])}</td>
                         <td className="px-2 py-2">{val(lead[F.campaign])}</td>
                         <td className="px-2 py-2">
-                          {lead[F.landing] && lead[F.landing] !== false ? (
+                          {lead[F.landing] && lead[F.landing] !== false && lead[F.landing].toLowerCase() !== 'none' ? (
                             <a
                               href={lead[F.landing]}
                               target="_blank"
