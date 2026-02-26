@@ -18,6 +18,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api\/ga4report/, '/ga4report'),
       },
+      '/api/odoo': {
+        target: 'https://works.wepick.kr',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/odoo/, ''),
+      },
     },
   },
 })

@@ -1,6 +1,8 @@
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { LeadMagnetFunnelTab } from './components/marketing/LeadMagnetFunnelTab'
 import { GA4YesterdayBanner } from './components/marketing/GA4YesterdayBanner'
 import { GA4SessionSourceTable } from './components/marketing/GA4SessionSourceTable'
+import NewPage from './pages/NewPage'
 import './App.css'
 
 const sampleDeals = [
@@ -21,18 +23,37 @@ const sampleDeals = [
   { id: '15', stage: 'won', source: 'email', amount: 2500000, created_at: '2026-02-24' },
 ]
 
-function App() {
+function HomePage() {
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
       <div className="max-w-7xl mx-auto space-y-6">
-        <section className="space-y-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">GA 리포트</h1>
+          <Link
+            to="/new"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            새 페이지 &rarr;
+          </Link>
+        </div>
+        <section className="space-y-4">
           <GA4YesterdayBanner />
           <GA4SessionSourceTable />
         </section>
         <LeadMagnetFunnelTab deals={sampleDeals} />
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/new" element={<NewPage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

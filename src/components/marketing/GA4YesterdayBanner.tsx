@@ -113,6 +113,12 @@ export function GA4YesterdayBanner() {
         loading={loading}
         error={error}
       />
+      {!loading && !error && lastWeekStats && prevWeekStats && (
+        <WeeklyComment
+          current={lastWeekStats}
+          previous={prevWeekStats}
+        />
+      )}
     </div>
   );
 }
@@ -200,5 +206,38 @@ function ChangeRate({ current, previous }: { current: number; previous: number }
     <span className={`ml-1.5 text-xs font-medium ${isUp ? 'text-red-500' : isDown ? 'text-blue-500' : 'text-muted-foreground'}`}>
       ({isUp ? '▲' : isDown ? '▼' : '-'}{Math.abs(change).toFixed(1)}%)
     </span>
+  );
+}
+
+function WeeklyComment({ current, previous }: { current: PeriodStats; previous: PeriodStats }) {
+  const visitorChange = calcChange(current.visitors, previous.visitors);
+  const pvChange = calcChange(current.pageViews, previous.pageViews);
+  const pagesPerVisitor = current.visitors > 0 ? (current.pageViews / current.visitors).toFixed(1) : '0';
+  const prevPagesPerVisitor = previous.visitors > 0 ? (previous.pageViews / previous.visitors).toFixed(1) : '0';
+
+  const visitorTrend = visitorChange !== null && visitorChange > 0 ? '증가' : visitorChange !== null && visitorChange < 0 ? '감소' : '유지';
+  const pvTrend = pvChange !== null && pvChange > 0 ? '증가' : pvChange !== null && pvChange < 0 ? '감소' : '유지';
+
+  const comments = [
+    `• 주간 방문자 ${formatNumber(current.visitors)}명으로 전주 대비 ${visitorTrend}했습니다.`,
+    `• 페이지뷰 ${formatNumber(current.pageViews)}회로 전주 대비 ${pvTrend} 추세입니다.`,
+    `• 방문자당 평균 ${pagesPerVisitor}페이지를 조회했습니다. (전주 ${prevPagesPerVisitor}페이지)`,
+    `• 일 평균 방문자는 ${formatNumber(Math.round(current.visitors / 7))}명입니다.`,
+    visitorChange !== null && visitorChange > 5
+      ? '• 트래픽이 눈에 띄게 상승 중이므로 전환율 최적화에 집중할 시점입니다.'
+      : visitorChange !== null && visitorChange < -5
+        ? '• 트래픽이 하락세이므로 유입 채널별 성과를 점검해 보세요.'
+        : '• 트래픽이 안정적으로 유지되고 있어 콘텐츠 품질 개선에 집중하세요.',
+  ];
+
+  return (
+    <div className="rounded-lg bg-muted/50 px-4 py-3">
+      <p className="text-xs font-semibold text-muted-foreground mb-2">주간 트래픽 코멘트</p>
+      <div className="space-y-1">
+        {comments.map((comment, i) => (
+          <p key={i} className="text-xs text-muted-foreground leading-relaxed">{comment}</p>
+        ))}
+      </div>
+    </div>
   );
 }
