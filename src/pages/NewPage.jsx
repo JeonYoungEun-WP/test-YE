@@ -196,8 +196,17 @@ export default function NewPage() {
                         <td className={`px-2 py-2 ${lead[F.source] === 'organic' ? 'font-bold text-destructive' : ''}`}>{val(lead[F.source])}</td>
                         <td className="px-2 py-2">{val(lead[F.medium])}</td>
                         <td className="px-2 py-2">{val(lead[F.campaign])}</td>
-                        <td className="px-2 py-2 max-w-[150px] truncate" title={val(lead[F.landing])}>
-                          {val(lead[F.landing])}
+                        <td className="px-2 py-2">
+                          {lead[F.landing] && lead[F.landing] !== false ? (
+                            <a
+                              href={lead[F.landing]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline break-all"
+                            >
+                              {lead[F.landing]}
+                            </a>
+                          ) : '-'}
                         </td>
                         <td className="px-2 py-2">{val(lead[F.keyword])}</td>
                         <td className="px-2 py-2 text-muted-foreground">
