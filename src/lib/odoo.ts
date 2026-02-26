@@ -5,7 +5,7 @@ const ODOO_API_KEY = import.meta.env.VITE_ODOO_API_KEY
 let uidCache: number | null = null
 
 async function jsonRpc(service: string, method: string, args: unknown[]) {
-  const res = await fetch('/api/odoo/jsonrpc', {
+  const res = await fetch('/api/odoo', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

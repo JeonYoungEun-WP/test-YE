@@ -21,7 +21,7 @@ export default defineConfig({
       '/api/odoo': {
         target: 'https://works.wepick.kr',
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/odoo/, ''),
+        rewrite: () => '/jsonrpc',
       },
     },
   },
