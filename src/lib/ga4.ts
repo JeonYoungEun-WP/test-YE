@@ -3,6 +3,7 @@ export interface GA4Data {
   totalPageViews: number;
   dailyTrend: { date: string; visitors: number; pageViews: number }[];
   sessionSources?: { source: string; sessions: number }[];
+  channelGroups?: { channel: string; sessions: number }[];
 }
 
 const GA4_API_URL = import.meta.env.VITE_GA4_API_URL || '/api/ga4report';
