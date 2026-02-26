@@ -109,11 +109,15 @@ export default function NewPage() {
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="px-1 py-2 font-medium text-left min-w-[50px]">날짜</th>
-                  {Array.from({ length: monthly.daysInMonth }, (_, i) => (
-                    <th key={i} className="px-1 py-2 font-medium min-w-[32px]">
-                      {monthly.month + 1}/{i + 1}
-                    </th>
-                  ))}
+                  {Array.from({ length: monthly.daysInMonth }, (_, i) => {
+                    const dow = new Date(monthly.year, monthly.month, i + 1).getDay()
+                    const color = dow === 0 ? 'text-destructive' : dow === 6 ? 'text-blue-500' : ''
+                    return (
+                      <th key={i} className={`px-1 py-2 font-medium min-w-[32px] ${color}`}>
+                        {monthly.month + 1}/{i + 1}
+                      </th>
+                    )
+                  })}
                   <th className="px-2 py-2 font-bold bg-muted">합계</th>
                 </tr>
               </thead>
