@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useOdoo } from '../hooks/useOdoo'
+import { searchRead } from '../lib/odoo'
 
 const PAGE_SIZE = 20
 
@@ -22,8 +23,40 @@ function val(v) {
   return v
 }
 
+function useMonthlyLeadCounts() {
+  const [counts, setCounts] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const endDate = `${year}-${String(month + 2).padStart(2, '0')}-01`
+
+  useEffect(() => {
+    let cancelled = false
+    searchRead('crm.lead', [['create_date', '>=', startDate], ['create_date', '<', endDate]], ['create_date'], { limit: 1000, order: 'create_date asc' })
+      .then((records) => {
+        if (cancelled) return
+        const map = {}
+        records.forEach((r) => {
+          const day = new Date(r.create_date).getDate()
+          map[day] = (map[day] || 0) + 1
+        })
+        setCounts(map)
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [startDate, endDate])
+
+  return { counts, daysInMonth, year, month, loading }
+}
+
 export default function NewPage() {
   const [page, setPage] = useState(0)
+  const monthly = useMonthlyLeadCounts()
 
   const { data: leads, total, loading, error } = useOdoo({
     model: 'crm.lead',
@@ -69,6 +102,40 @@ export default function NewPage() {
             </span>
           )}
         </div>
+
+        {!monthly.loading && (
+          <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+            <table className="w-full text-sm text-center">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="px-1 py-2 font-medium text-left min-w-[50px]">날짜</th>
+                  {Array.from({ length: monthly.daysInMonth }, (_, i) => (
+                    <th key={i} className="px-1 py-2 font-medium min-w-[32px]">
+                      {monthly.month + 1}/{i + 1}
+                    </th>
+                  ))}
+                  <th className="px-2 py-2 font-bold bg-muted">합계</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="px-1 py-2 font-medium text-left">리드수</td>
+                  {Array.from({ length: monthly.daysInMonth }, (_, i) => {
+                    const count = monthly.counts[i + 1] || 0
+                    return (
+                      <td key={i} className={`px-1 py-2 ${count > 0 ? 'font-semibold' : 'text-muted-foreground'}`}>
+                        {count || '-'}
+                      </td>
+                    )
+                  })}
+                  <td className="px-2 py-2 font-bold bg-muted">
+                    {Object.values(monthly.counts).reduce((a, b) => a + b, 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
@@ -126,7 +193,7 @@ export default function NewPage() {
                         <td className="px-2 py-2">{val(lead[F.industry])}</td>
                         <td className="px-2 py-2">{val(lead[F.product])}</td>
                         <td className="px-2 py-2">{val(lead[F.platform])}</td>
-                        <td className="px-2 py-2">{val(lead[F.source])}</td>
+                        <td className={`px-2 py-2 ${lead[F.source] === 'organic' ? 'font-bold text-destructive' : ''}`}>{val(lead[F.source])}</td>
                         <td className="px-2 py-2">{val(lead[F.medium])}</td>
                         <td className="px-2 py-2">{val(lead[F.campaign])}</td>
                         <td className="px-2 py-2 max-w-[150px] truncate" title={val(lead[F.landing])}>
