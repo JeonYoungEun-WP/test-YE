@@ -32,7 +32,6 @@ export default function NewPage() {
       'name',
       'partner_name',
       'email_from',
-      'phone',
       'expected_revenue',
       'stage_id',
       'create_date',
@@ -84,13 +83,12 @@ export default function NewPage() {
         ) : (
           <>
             <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="w-full text-sm whitespace-nowrap">
+              <table className="min-w-[1800px] text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
                     <th className="px-4 py-3 text-left font-medium">리드명</th>
                     <th className="px-4 py-3 text-left font-medium">고객</th>
                     <th className="px-4 py-3 text-left font-medium">이메일</th>
-                    <th className="px-4 py-3 text-left font-medium">전화</th>
                     <th className="px-4 py-3 text-right font-medium">예상 매출</th>
                     <th className="px-4 py-3 text-left font-medium">단계</th>
                     <th className="px-4 py-3 text-left font-medium">담당자</th>
@@ -108,7 +106,7 @@ export default function NewPage() {
                 <tbody>
                   {leads.length === 0 ? (
                     <tr>
-                      <td colSpan={16} className="px-4 py-10 text-center text-muted-foreground">
+                      <td colSpan={15} className="px-4 py-10 text-center text-muted-foreground">
                         리드 데이터가 없습니다.
                       </td>
                     </tr>
@@ -118,7 +116,6 @@ export default function NewPage() {
                         <td className="px-4 py-3 font-medium">{val(lead.name)}</td>
                         <td className="px-4 py-3">{val(lead.partner_name)}</td>
                         <td className="px-4 py-3">{val(lead.email_from)}</td>
-                        <td className="px-4 py-3">{val(lead.phone)}</td>
                         <td className="px-4 py-3 text-right">
                           {lead.expected_revenue
                             ? Number(lead.expected_revenue).toLocaleString('ko-KR') + '원'
