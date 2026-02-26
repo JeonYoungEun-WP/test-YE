@@ -43,6 +43,11 @@ function useWeeklyDates() {
   };
 }
 
+interface SubtotalDef {
+  label: string;
+  match: (name: string) => boolean;
+}
+
 function RankingTable({
   title,
   columnLabel,
@@ -50,6 +55,7 @@ function RankingTable({
   prevWeekLabel,
   currentData,
   previousData,
+  subtotals,
 }: {
   title: string;
   columnLabel: string;
@@ -57,6 +63,7 @@ function RankingTable({
   prevWeekLabel: string;
   currentData: DimensionRow[];
   previousData: DimensionRow[];
+  subtotals?: SubtotalDef[];
 }) {
   const prevMap = new Map(previousData.map((s) => [s.name, s.sessions]));
 
@@ -88,6 +95,29 @@ function RankingTable({
                   <td className="py-2.5 px-4 text-right font-semibold">{formatNumber(row.sessions)}</td>
                   <td className="py-2.5 px-4 text-right text-muted-foreground">{formatNumber(prevSessions)}</td>
                   <td className={`py-2.5 pl-4 text-right font-medium ${isUp ? 'text-red-500' : isDown ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                    {change !== null ? (
+                      <>{isUp ? '▲' : isDown ? '▼' : '-'}{Math.abs(change).toFixed(1)}%</>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {subtotals?.map((sub) => {
+              const curTotal = currentData.filter((r) => sub.match(r.name)).reduce((s, r) => s + r.sessions, 0);
+              const prevTotal = previousData.filter((r) => sub.match(r.name)).reduce((s, r) => s + r.sessions, 0);
+              const change = calcChange(curTotal, prevTotal);
+              const isUp = change !== null && change > 0;
+              const isDown = change !== null && change < 0;
+
+              return (
+                <tr key={sub.label} className="border-t-2 bg-muted/30">
+                  <td className="py-2.5 pr-4" />
+                  <td className="py-2.5 pr-4 font-bold text-foreground">{sub.label}</td>
+                  <td className="py-2.5 px-4 text-right font-bold">{formatNumber(curTotal)}</td>
+                  <td className="py-2.5 px-4 text-right font-bold text-muted-foreground">{formatNumber(prevTotal)}</td>
+                  <td className={`py-2.5 pl-4 text-right font-bold ${isUp ? 'text-red-500' : isDown ? 'text-blue-500' : 'text-muted-foreground'}`}>
                     {change !== null ? (
                       <>{isUp ? '▲' : isDown ? '▼' : '-'}{Math.abs(change).toFixed(1)}%</>
                     ) : (
@@ -171,6 +201,10 @@ export function GA4SessionSourceTable() {
         prevWeekLabel={prevWeekLabel}
         currentData={lastWeekChannels}
         previousData={prevWeekChannels}
+        subtotals={[
+          { label: 'Organic 소계', match: (n) => ['Organic Search', 'Direct', 'Organic Social'].includes(n) },
+          { label: 'Paid 소계', match: (n) => ['Paid Social', 'Paid Other', 'Paid Search'].includes(n) },
+        ]}
       />
       <RankingTable
         title="세션 소스 TOP 10 (세션수)"
