@@ -23,6 +23,29 @@ function val(v) {
   return v
 }
 
+const COLUMNS = [
+  { key: 'name', label: '리드명', align: 'left' },
+  { key: 'partner_name', label: '고객', align: 'left' },
+  { key: 'email_from', label: '이메일', align: 'left' },
+  { key: 'expected_revenue', label: '예상 매출', align: 'right' },
+  { key: 'stage_id', label: '단계', align: 'left' },
+  { key: 'user_id', label: '담당자', align: 'left' },
+  { key: F.industry, label: '업종', align: 'left' },
+  { key: F.product, label: '관심상품', align: 'left' },
+  { key: F.platform, label: '플랫폼', align: 'left' },
+  { key: F.source, label: '유입경로', align: 'left' },
+  { key: F.medium, label: '전달매체', align: 'left' },
+  { key: F.campaign, label: '캠페인', align: 'left' },
+  { key: F.landing, label: '랜딩', align: 'left' },
+  { key: F.keyword, label: '키워드', align: 'left' },
+  { key: 'create_date', label: '생성일', align: 'left' },
+]
+
+function SortArrow({ field, sortField, sortDir }) {
+  if (field !== sortField) return <span className="ml-1 text-muted-foreground/40">&#8597;</span>
+  return <span className="ml-1">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+}
+
 function useMonthlyLeadCounts() {
   const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
@@ -56,31 +79,27 @@ function useMonthlyLeadCounts() {
 
 export default function NewPage() {
   const [page, setPage] = useState(0)
+  const [sortField, setSortField] = useState('create_date')
+  const [sortDir, setSortDir] = useState('desc')
   const monthly = useMonthlyLeadCounts()
+
+  const handleSort = (field) => {
+    if (field === sortField) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+    setPage(0)
+  }
 
   const { data: leads, total, loading, error } = useOdoo({
     model: 'crm.lead',
     domain: [],
-    fields: [
-      'name',
-      'partner_name',
-      'email_from',
-      'expected_revenue',
-      'stage_id',
-      'create_date',
-      'user_id',
-      F.industry,
-      F.product,
-      F.platform,
-      F.source,
-      F.medium,
-      F.campaign,
-      F.landing,
-      F.keyword,
-    ],
+    fields: COLUMNS.map((c) => c.key),
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
-    order: 'create_date desc',
+    order: `${sortField} ${sortDir}`,
   })
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
@@ -157,21 +176,16 @@ export default function NewPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="px-2 py-2 text-left font-medium">리드명</th>
-                    <th className="px-2 py-2 text-left font-medium">고객</th>
-                    <th className="px-2 py-2 text-left font-medium">이메일</th>
-                    <th className="px-2 py-2 text-right font-medium">예상 매출</th>
-                    <th className="px-2 py-2 text-left font-medium">단계</th>
-                    <th className="px-2 py-2 text-left font-medium">담당자</th>
-                    <th className="px-2 py-2 text-left font-medium">업종</th>
-                    <th className="px-2 py-2 text-left font-medium">관심상품</th>
-                    <th className="px-2 py-2 text-left font-medium">플랫폼</th>
-                    <th className="px-2 py-2 text-left font-medium">유입경로</th>
-                    <th className="px-2 py-2 text-left font-medium">전달매체</th>
-                    <th className="px-2 py-2 text-left font-medium">캠페인</th>
-                    <th className="px-2 py-2 text-left font-medium">랜딩</th>
-                    <th className="px-2 py-2 text-left font-medium">키워드</th>
-                    <th className="px-2 py-2 text-left font-medium">생성일</th>
+                    {COLUMNS.map((col) => (
+                      <th
+                        key={col.key}
+                        className={`px-2 py-2 font-medium cursor-pointer select-none hover:bg-muted/80 ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                        onClick={() => handleSort(col.key)}
+                      >
+                        {col.label}
+                        <SortArrow field={col.key} sortField={sortField} sortDir={sortDir} />
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -184,40 +198,44 @@ export default function NewPage() {
                   ) : (
                     leads.map((lead) => (
                       <tr key={lead.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                        <td className="px-2 py-2 font-medium">{val(lead.name)}</td>
-                        <td className="px-2 py-2">{val(lead.partner_name)}</td>
-                        <td className="px-2 py-2">{val(lead.email_from)}</td>
-                        <td className="px-2 py-2 text-right">
-                          {lead.expected_revenue
-                            ? Number(lead.expected_revenue).toLocaleString('ko-KR') + '원'
-                            : '-'}
-                        </td>
-                        <td className="px-2 py-2">{val(lead.stage_id)}</td>
-                        <td className="px-2 py-2">{val(lead.user_id)}</td>
-                        <td className="px-2 py-2">{val(lead[F.industry])}</td>
-                        <td className="px-2 py-2">{val(lead[F.product])}</td>
-                        <td className="px-2 py-2">{val(lead[F.platform])}</td>
-                        <td className={`px-2 py-2 ${lead[F.source] === 'organic' ? 'font-bold text-destructive' : ''}`}>{val(lead[F.source])}</td>
-                        <td className="px-2 py-2">{val(lead[F.medium])}</td>
-                        <td className="px-2 py-2">{val(lead[F.campaign])}</td>
-                        <td className="px-2 py-2">
-                          {lead[F.landing] && lead[F.landing] !== false && lead[F.landing].toLowerCase() !== 'none' ? (
-                            <a
-                              href={lead[F.landing]}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline break-all"
-                            >
-                              {lead[F.landing]}
-                            </a>
-                          ) : '-'}
-                        </td>
-                        <td className="px-2 py-2">{val(lead[F.keyword])}</td>
-                        <td className="px-2 py-2 text-muted-foreground">
-                          {lead.create_date
-                            ? new Date(lead.create_date).toLocaleDateString('ko-KR')
-                            : '-'}
-                        </td>
+                        {COLUMNS.map((col) => {
+                          const v = lead[col.key]
+                          // 특수 렌더링
+                          if (col.key === 'expected_revenue') {
+                            return (
+                              <td key={col.key} className="px-2 py-2 text-right">
+                                {v ? Number(v).toLocaleString('ko-KR') + '원' : '-'}
+                              </td>
+                            )
+                          }
+                          if (col.key === F.source) {
+                            return (
+                              <td key={col.key} className={`px-2 py-2 ${v === 'organic' ? 'font-bold text-destructive' : ''}`}>
+                                {val(v)}
+                              </td>
+                            )
+                          }
+                          if (col.key === F.landing) {
+                            return (
+                              <td key={col.key} className="px-2 py-2">
+                                {v && v !== false && String(v).toLowerCase() !== 'none' ? (
+                                  <a href={v} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">{v}</a>
+                                ) : '-'}
+                              </td>
+                            )
+                          }
+                          if (col.key === 'create_date') {
+                            return (
+                              <td key={col.key} className="px-2 py-2 text-muted-foreground">
+                                {v ? new Date(v).toLocaleDateString('ko-KR') : '-'}
+                              </td>
+                            )
+                          }
+                          if (col.key === 'name') {
+                            return <td key={col.key} className="px-2 py-2 font-medium">{val(v)}</td>
+                          }
+                          return <td key={col.key} className="px-2 py-2">{val(v)}</td>
+                        })}
                       </tr>
                     ))
                   )}
