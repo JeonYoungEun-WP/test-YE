@@ -58,7 +58,7 @@ export function GA4YesterdayBanner() {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">어제 GA4 실시간 리포트</p>
+            <p className="text-sm font-semibold text-foreground">어제</p>
             <p className="text-xs text-muted-foreground">{displayDate}</p>
           </div>
         </div>
