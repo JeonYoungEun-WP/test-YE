@@ -64,6 +64,7 @@ function RankingTable({
   currentData: DimensionRow[];
   previousData: DimensionRow[];
   subtotals?: SubtotalDef[];
+  footnotes?: string[];
 }) {
   const prevMap = new Map(previousData.map((s) => [s.name, s.sessions]));
 
@@ -130,6 +131,13 @@ function RankingTable({
           </tbody>
         </table>
       </div>
+      {footnotes && footnotes.length > 0 && (
+        <div className="mt-3 space-y-0.5">
+          {footnotes.map((note, i) => (
+            <p key={i} className="text-[11px] text-muted-foreground">* {note}</p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -204,6 +212,10 @@ export function GA4SessionSourceTable() {
         subtotals={[
           { label: 'Organic 소계', match: (n) => ['Organic Search', 'Direct', 'Organic Social'].includes(n) },
           { label: 'Paid 소계', match: (n) => ['Paid Social', 'Paid Other', 'Paid Search'].includes(n) },
+        ]}
+        footnotes={[
+          'Organic 소계: Organic Search + Direct + Organic Social',
+          'Paid 소계: Paid Social + Paid Other + Paid Search',
         ]}
       />
       <RankingTable
