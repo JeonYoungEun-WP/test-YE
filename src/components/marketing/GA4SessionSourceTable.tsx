@@ -136,11 +136,11 @@ export function GA4SessionSourceTable() {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-xl border bg-card p-4 sm:p-5">
-          <p className="text-sm font-semibold mb-3">기본 채널 그룹 TOP 10</p>
+          <p className="text-sm font-semibold mb-3">기본 채널 그룹 TOP 10 (세션수)</p>
           <p className="text-sm text-muted-foreground animate-pulse">로딩 중···</p>
         </div>
         <div className="rounded-xl border bg-card p-4 sm:p-5">
-          <p className="text-sm font-semibold mb-3">세션 소스 TOP 10</p>
+          <p className="text-sm font-semibold mb-3">세션 소스 TOP 10 (세션수)</p>
           <p className="text-sm text-muted-foreground animate-pulse">로딩 중···</p>
         </div>
       </div>
@@ -151,11 +151,11 @@ export function GA4SessionSourceTable() {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-xl border bg-card p-4 sm:p-5">
-          <p className="text-sm font-semibold mb-3">기본 채널 그룹 TOP 10</p>
+          <p className="text-sm font-semibold mb-3">기본 채널 그룹 TOP 10 (세션수)</p>
           <p className="text-sm text-destructive">데이터를 불러올 수 없습니다.</p>
         </div>
         <div className="rounded-xl border bg-card p-4 sm:p-5">
-          <p className="text-sm font-semibold mb-3">세션 소스 TOP 10</p>
+          <p className="text-sm font-semibold mb-3">세션 소스 TOP 10 (세션수)</p>
           <p className="text-sm text-destructive">데이터를 불러올 수 없습니다.</p>
         </div>
       </div>
@@ -165,7 +165,7 @@ export function GA4SessionSourceTable() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <RankingTable
-        title="기본 채널 그룹 TOP 10"
+        title="기본 채널 그룹 TOP 10 (세션수)"
         columnLabel="채널 그룹"
         lastWeekLabel={lastWeekLabel}
         prevWeekLabel={prevWeekLabel}
@@ -173,7 +173,7 @@ export function GA4SessionSourceTable() {
         previousData={prevWeekChannels}
       />
       <RankingTable
-        title="세션 소스 TOP 10"
+        title="세션 소스 TOP 10 (세션수)"
         columnLabel="세션 소스"
         lastWeekLabel={lastWeekLabel}
         prevWeekLabel={prevWeekLabel}
