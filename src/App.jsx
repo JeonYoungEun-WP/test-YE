@@ -3,6 +3,7 @@ import { LeadMagnetFunnelTab } from './components/marketing/LeadMagnetFunnelTab'
 import { GA4YesterdayBanner } from './components/marketing/GA4YesterdayBanner'
 import { GA4SessionSourceTable } from './components/marketing/GA4SessionSourceTable'
 import NewPage from './pages/NewPage'
+import PasswordGate from './components/PasswordGate'
 import './App.css'
 
 const sampleDeals = [
@@ -48,12 +49,14 @@ function HomePage() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/new" element={<NewPage />} />
-      </Routes>
-    </BrowserRouter>
+    <PasswordGate>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/new" element={<NewPage />} />
+        </Routes>
+      </BrowserRouter>
+    </PasswordGate>
   )
 }
 
