@@ -3,29 +3,41 @@ import { Users, Eye } from 'lucide-react';
 import { fetchGA4Data } from '@/lib/ga4';
 import { formatNumber } from '@/lib/format';
 
-interface YesterdayStats {
+interface DayStats {
   visitors: number;
   pageViews: number;
 }
 
+function calcChange(current: number, previous: number): number | null {
+  if (previous === 0) return current > 0 ? 100 : null;
+  return ((current - previous) / previous) * 100;
+}
+
 export function GA4YesterdayBanner() {
-  const [stats, setStats] = useState<YesterdayStats | null>(null);
+  const [stats, setStats] = useState<DayStats | null>(null);
+  const [prevStats, setPrevStats] = useState<DayStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
+  const dayBefore = new Date();
+  dayBefore.setDate(dayBefore.getDate() - 2);
   const dateStr = yesterday.toISOString().split('T')[0];
+  const prevDateStr = dayBefore.toISOString().split('T')[0];
   const displayDate = `${yesterday.getFullYear()}.${String(yesterday.getMonth() + 1).padStart(2, '0')}.${String(yesterday.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
-    fetchGA4Data('custom', dateStr, dateStr)
-      .then((data) => {
+    Promise.all([
+      fetchGA4Data('custom', dateStr, dateStr),
+      fetchGA4Data('custom', prevDateStr, prevDateStr),
+    ])
+      .then(([data, prevData]) => {
         if (data) {
-          setStats({
-            visitors: data.totalVisitors,
-            pageViews: data.totalPageViews,
-          });
+          setStats({ visitors: data.totalVisitors, pageViews: data.totalPageViews });
+        }
+        if (prevData) {
+          setPrevStats({ visitors: prevData.totalVisitors, pageViews: prevData.totalPageViews });
         }
         setLoading(false);
       })
@@ -33,7 +45,7 @@ export function GA4YesterdayBanner() {
         setError(true);
         setLoading(false);
       });
-  }, [dateStr]);
+  }, [dateStr, prevDateStr]);
 
   return (
     <div className="rounded-xl border bg-card p-4 sm:p-5">
@@ -64,7 +76,7 @@ export function GA4YesterdayBanner() {
                 ) : error ? (
                   <span className="text-sm text-destructive">오류</span>
                 ) : (
-                  formatNumber(stats?.visitors ?? 0)
+                  <>{formatNumber(stats?.visitors ?? 0)}<ChangeRate current={stats?.visitors ?? 0} previous={prevStats?.visitors ?? 0} /></>
                 )}
               </p>
             </div>
@@ -84,7 +96,7 @@ export function GA4YesterdayBanner() {
                 ) : error ? (
                   <span className="text-sm text-destructive">오류</span>
                 ) : (
-                  formatNumber(stats?.pageViews ?? 0)
+                  <>{formatNumber(stats?.pageViews ?? 0)}<ChangeRate current={stats?.pageViews ?? 0} previous={prevStats?.pageViews ?? 0} /></>
                 )}
               </p>
             </div>
@@ -92,5 +104,17 @@ export function GA4YesterdayBanner() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ChangeRate({ current, previous }: { current: number; previous: number }) {
+  const change = calcChange(current, previous);
+  if (change === null) return null;
+  const isUp = change > 0;
+  const isDown = change < 0;
+  return (
+    <span className={`ml-1.5 text-xs font-medium ${isUp ? 'text-red-500' : isDown ? 'text-blue-500' : 'text-muted-foreground'}`}>
+      ({isUp ? '▲' : isDown ? '▼' : '-'}{Math.abs(change).toFixed(1)}%)
+    </span>
   );
 }
