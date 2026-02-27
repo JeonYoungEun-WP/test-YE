@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 
 const ODOO_URL = process.env.ODOO_URL || 'https://works.wepick.kr'
 const ODOO_DB = process.env.ODOO_DB || 'works'
@@ -73,7 +73,7 @@ function mapLeadToRow(lead) {
   }
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const uid = await odooRpc('common', 'authenticate', [
       ODOO_DB, ODOO_USERNAME, ODOO_API_KEY, {},
