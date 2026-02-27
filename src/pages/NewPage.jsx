@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useOdoo } from '../hooks/useOdoo'
-import { searchRead } from '../lib/odoo'
+import { useLeads, useMonthlyLeadCounts } from '../hooks/useLeads'
 
 const PAGE_SIZE = 20
 
@@ -46,37 +45,6 @@ function SortArrow({ field, sortField, sortDir }) {
   return <span className="ml-1">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
 }
 
-function useMonthlyLeadCounts() {
-  const [counts, setCounts] = useState({})
-  const [loading, setLoading] = useState(true)
-
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
-  const endDate = `${year}-${String(month + 2).padStart(2, '0')}-01`
-
-  useEffect(() => {
-    let cancelled = false
-    searchRead('crm.lead', [['create_date', '>=', startDate], ['create_date', '<', endDate]], ['create_date'], { limit: 1000, order: 'create_date asc' })
-      .then((records) => {
-        if (cancelled) return
-        const map = {}
-        records.forEach((r) => {
-          const day = new Date(r.create_date).getDate()
-          map[day] = (map[day] || 0) + 1
-        })
-        setCounts(map)
-      })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [startDate, endDate])
-
-  return { counts, daysInMonth, year, month, loading }
-}
-
 export default function NewPage() {
   const [page, setPage] = useState(0)
   const [sortField, setSortField] = useState('create_date')
@@ -93,13 +61,11 @@ export default function NewPage() {
     setPage(0)
   }
 
-  const { data: leads, total, loading, error } = useOdoo({
-    model: 'crm.lead',
-    domain: [],
-    fields: COLUMNS.map((c) => c.key),
+  const { data: leads, total, loading, error, source } = useLeads({
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
-    order: `${sortField} ${sortDir}`,
+    sortField,
+    sortDir,
   })
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
@@ -115,11 +81,25 @@ export default function NewPage() {
 
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">CRM 리드 관리</h1>
-          {!loading && (
-            <span className="text-sm text-muted-foreground">
-              총 {total.toLocaleString()}건
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {!loading && (
+              <span className="text-sm text-muted-foreground">
+                총 {total.toLocaleString()}건
+                <span className="ml-1 text-xs opacity-60">({source === 'supabase' ? 'DB' : 'Odoo'})</span>
+              </span>
+            )}
+            <button
+              onClick={() => {
+                fetch('/api/sync-leads').then(r => r.json()).then(r => {
+                  alert(`동기화 완료: ${r.synced}건 (${r.mode})`)
+                  window.location.reload()
+                }).catch(() => alert('동기화 실패'))
+              }}
+              className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-muted/50"
+            >
+              동기화
+            </button>
+          </div>
         </div>
 
         {!monthly.loading && (
